@@ -12,6 +12,9 @@ import data.dataDB.user.DB_user_unit;
 
 public class Server_thread_service extends SuperService{
 
+	public static String REGEX_SPLIT = "\\$\\%\\^";
+	public static String REGEX_CONCAT = "$%^";
+	
 	protected static Map<String, Method> methodMap;
 	
 	private static HashMap<String, Class<?>> clsMap;
@@ -25,7 +28,7 @@ public class Server_thread_service extends SuperService{
 		
 		methodMap = new HashMap<String, Method>();
 		
-		methodMap.put("getData", Server_thread_service.class.getDeclaredMethod("getData", String[].class));
+		methodMap.put("getData", Server_thread_service.class.getDeclaredMethod("getData", String.class));
 		methodMap.put("connect", Server_thread_service.class.getDeclaredMethod("connect",Server_thread.class));
 		methodMap.put("disconnect", Server_thread_service.class.getDeclaredMethod("disconnect"));
 		methodMap.put("kick", Server_thread_service.class.getDeclaredMethod("kick",Server_thread.class));
@@ -73,7 +76,7 @@ public class Server_thread_service extends SuperService{
 			
 		}else{
 			
-			thread.sendData("1\ntrue");
+			thread.sendData("1" + REGEX_CONCAT + "true");
 		}
 	}
 	
@@ -114,7 +117,7 @@ public class Server_thread_service extends SuperService{
 			
 			if(thread != null){
 			
-				thread.sendData("1\ntrue");
+				thread.sendData("1" + REGEX_CONCAT + "true");
 			}
 		}
 	}
@@ -126,12 +129,14 @@ public class Server_thread_service extends SuperService{
 		thread = null;
 	}
 	
-	public void getData(String[] strVec) throws Exception{
+	public void getData(String _str) throws Exception{
 		
 		if(processingThread != null){
 			
 			throw new Exception("getData error processingThread is not null!");
 		}
+		
+		String[] strVec = _str.split(REGEX_SPLIT);
 		
 		int index = Integer.parseInt(strVec[0]);
 		
@@ -201,7 +206,7 @@ public class Server_thread_service extends SuperService{
 		
 		if(csv_connect.arg.length > 0){
 		
-			str = str + "\n";
+			str = str + REGEX_CONCAT;
 		
 			for(int i = 0 ; i < csv_connect.arg.length ; i++){
 				
@@ -211,7 +216,7 @@ public class Server_thread_service extends SuperService{
 				
 				if(i < csv_connect.arg.length - 1){
 				
-					str = str + concat(objVec[i], times) + "\n";
+					str = str + concat(objVec[i], times) + REGEX_CONCAT;
 					
 				}else{
 					

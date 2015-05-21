@@ -1,36 +1,39 @@
 package server;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.ArrayList;
 
 import data.dataDB.user.DB_user;
 
 public class Server_thread extends Thread {
 
+	private static int CHAR_MAX_LENGTH = 1024;
+	
 	private Socket socket;
 	
-	private BufferedReader reader;
+	private DataInputStream reader;
 	private DataOutputStream writer;
 	
-	private ArrayList<String> strVec;
 	private Server_thread_service service;
 	
-	private static String end = "end";
-	
 	private boolean isDisconnected;
+	
+	private int length = -1;
+	private int pos = 0;
+	private byte[] resultByteArr;
+	private byte[] tmpByteArr;
 	
 	public Server_thread(Socket _socket){
 		
 		socket = _socket;
 		
-		strVec = new ArrayList<>();
+		resultByteArr = new byte[CHAR_MAX_LENGTH];
+		tmpByteArr = new byte[CHAR_MAX_LENGTH];
 		
 		try{
 		
-			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			reader = new DataInputStream(socket.getInputStream());
 			writer = new DataOutputStream(socket.getOutputStream());
 			
 		}catch(Exception e){
@@ -46,7 +49,7 @@ public class Server_thread extends Thread {
 			return;
 		}
 		
-		writer.writeInt(_str.length());
+		writer.writeShort(_str.length());
 		
 		writer.writeBytes(_str);
 		
@@ -64,31 +67,47 @@ public class Server_thread extends Thread {
 			
 			try{
 				
-				String str = reader.readLine();
-				
-				if(str == null){
+				if(length == -1){
 					
-					System.out.println("close!!!" + Thread.currentThread().getName());
+					length = reader.readShort();
 					
-					disconnect();
-					
-					break;
+					if(length > CHAR_MAX_LENGTH){
+						
+						disconnect();
+						
+						break;
+					}
 					
 				}else{
 					
-					if(str.equals(end)){
+					int result = reader.read(tmpByteArr, 0, length);
+					
+					for(int i = 0 ; i < result ; i++){
 						
-						String[] strArr = new String[strVec.size()];
+						resultByteArr[pos] = tmpByteArr[i];
 						
-						strVec.toArray(strArr);
+						pos++;
+					}
+					
+					if(result < length){
 						
-						strVec.clear();
+						length = length - result;
+						
+					}else{
+						
+						String str = new String(resultByteArr, 0, pos);
+
+						pos = 0;
+					
+						length = -1;
 						
 						if(service != null){
 						
-							service.process("getData", (Object)strArr);
+							service.process("getData", str);
 							
 						}else{
+							
+							String[] strArr = str.split(Server_thread_service.REGEX_SPLIT);
 							
 							if(strArr.length == 3 && strArr[0].equals("0")){
 							
@@ -107,24 +126,20 @@ public class Server_thread extends Thread {
 									
 								}else{
 									
-									sendData("1\nfalse");
+									sendData("1" + Server_thread_service.REGEX_CONCAT + "false");
 								}
 								
 							}else{
 								
-								sendData("999\nPlease login first");
+								sendData("999" + Server_thread_service.REGEX_CONCAT + "Please login first");
 							}
 						}
-						
-					}else{
-						
-						strVec.add(str);
 					}
 				}
 				
 			}catch(Exception e){
 				
-				e.printStackTrace();
+//				e.printStackTrace();
 				
 				try{
 				
@@ -156,5 +171,9 @@ public class Server_thread extends Thread {
 		writer.close();
 		
 		socket.close();
+		
+		length = -1;
+		
+		pos = 0;
 	}
 }
