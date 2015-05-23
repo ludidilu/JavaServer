@@ -20,11 +20,14 @@ public class Csv_connect extends Csv{
 	public String methodName;
 	public Method method;
 	public String[] arg;
+	public int[] argTimes;
 	public int type;
 	
 	public void setMethod(){
 		
 		Class<?>[] classVec = new Class<?>[arg.length];
+		
+		argTimes = new int[arg.length];
 		
 		for(int i = 0 ; i < arg.length ; i++){
 			
@@ -50,12 +53,18 @@ public class Csv_connect extends Csv{
 				
 					classVec[i] = boolean.class;
 				}
+				
+				argTimes[i] = 0;
 					
 			}else{
 				
 				String str = arg[i].substring(0, 3);
 				
 				int times = (length - 3) / 2;
+				
+				argTimes[i] = times;
+				
+				arg[i] = str;
 				
 				classVec[i] = getClass(times, str);
 			}

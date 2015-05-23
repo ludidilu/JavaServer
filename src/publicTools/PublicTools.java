@@ -69,4 +69,18 @@ public class PublicTools {
 		
 		return resultMap;
 	}
+	
+	public static int byteArrayToShort(byte[] _byteArr,int _offset) {  
+		
+		int value = ((_byteArr[_offset] & 0x000000FF) << 8) + (_byteArr[1 + _offset] & 0x000000FF);
+		
+	    return value;
+		
+//		int value= 0;
+//	       for (int i = 0; i < 2; i++) {
+//	           int shift= (2 - 1 - i) * 8;
+//	           value +=(_byteArr[i + _offset] & 0x000000FF) << shift;
+//	       }
+//	       return value;
+    }      
 }

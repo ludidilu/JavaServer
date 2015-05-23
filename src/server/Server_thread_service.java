@@ -12,9 +12,6 @@ import data.dataDB.user.DB_user_unit;
 
 public class Server_thread_service extends SuperService{
 
-	public static String REGEX_SPLIT = "\\$\\%\\^";
-	public static String REGEX_CONCAT = "$%^";
-	
 	protected static Map<String, Method> methodMap;
 	
 	private static HashMap<String, Class<?>> clsMap;
@@ -28,7 +25,7 @@ public class Server_thread_service extends SuperService{
 		
 		methodMap = new HashMap<String, Method>();
 		
-		methodMap.put("getData", Server_thread_service.class.getDeclaredMethod("getData", String.class));
+		methodMap.put("getData", Server_thread_service.class.getDeclaredMethod("getData", int.class, String[].class));
 		methodMap.put("connect", Server_thread_service.class.getDeclaredMethod("connect",Server_thread.class));
 		methodMap.put("disconnect", Server_thread_service.class.getDeclaredMethod("disconnect"));
 		methodMap.put("kick", Server_thread_service.class.getDeclaredMethod("kick",Server_thread.class));
@@ -76,7 +73,7 @@ public class Server_thread_service extends SuperService{
 			
 		}else{
 			
-			thread.sendData("1" + REGEX_CONCAT + "true");
+			thread.sendData(1, new String[]{"true"});
 		}
 	}
 	
@@ -117,7 +114,7 @@ public class Server_thread_service extends SuperService{
 			
 			if(thread != null){
 			
-				thread.sendData("1" + REGEX_CONCAT + "true");
+				thread.sendData(1, new String[]{"true"});
 			}
 		}
 	}
@@ -129,18 +126,14 @@ public class Server_thread_service extends SuperService{
 		thread = null;
 	}
 	
-	public void getData(String _str) throws Exception{
+	public void getData(int _id, String[] _strVec) throws Exception{
 		
 		if(processingThread != null){
 			
 			throw new Exception("getData error processingThread is not null!");
 		}
 		
-		String[] strVec = _str.split(REGEX_SPLIT);
-		
-		int index = Integer.parseInt(strVec[0]);
-		
-		Csv_connect csv_connect = Csv_connect.dic.get(index);
+		Csv_connect csv_connect = Csv_connect.dic.get(_id);
 		
 		if(csv_connect.method == null){
 			
@@ -157,13 +150,7 @@ public class Server_thread_service extends SuperService{
 		
 		for(int i = 0 ; i < csv_connect.arg.length ; i++){
 			
-			int length = csv_connect.arg[i].length();
-			
-			String str = csv_connect.arg[i].substring(0, 3);
-			
-			int times = (length - 3) / 2;
-			
-			objVec[i] = split(strVec[i + 1], times, str);
+			objVec[i] = split(_strVec[i], csv_connect.argTimes[i], csv_connect.arg[i]);
 		}
 		
 		csv_connect.method.invoke(this, objVec);
@@ -202,30 +189,16 @@ public class Server_thread_service extends SuperService{
 	
 	private void sendDataReal(int _id, Csv_connect csv_connect, Object[] objVec) throws Exception{
 		
-		String str = String.valueOf(_id);
+		String[] strVec = new String[csv_connect.arg.length];
 		
-		if(csv_connect.arg.length > 0){
-		
-			str = str + REGEX_CONCAT;
-		
-			for(int i = 0 ; i < csv_connect.arg.length ; i++){
-				
-				int length = csv_connect.arg[i].length();
-				
-				int times = (length - 3) / 2;
-				
-				if(i < csv_connect.arg.length - 1){
-				
-					str = str + concat(objVec[i], times) + REGEX_CONCAT;
-					
-				}else{
-					
-					str = str + concat(objVec[i], times);
-				}
-			}
+		for(int i = 0 ; i < csv_connect.arg.length ; i++){
+
+			String str = concat(objVec[i], csv_connect.argTimes[i]);
+			
+			strVec[i] = str;
 		}
 			
-		thread.sendData(str);
+		thread.sendData(_id,strVec);
 	}
 	
 	private static Object split(String _str,int _times,String _type){

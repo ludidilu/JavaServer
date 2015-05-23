@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
+import publicTools.PublicTools;
 import data.dataDB.user.DB_user;
 
 public class Server_thread extends Thread {
@@ -22,14 +23,12 @@ public class Server_thread extends Thread {
 	private int length = -1;
 	private int pos = 0;
 	private byte[] resultByteArr;
-	private byte[] tmpByteArr;
 	
 	public Server_thread(Socket _socket){
 		
 		socket = _socket;
 		
 		resultByteArr = new byte[CHAR_MAX_LENGTH];
-		tmpByteArr = new byte[CHAR_MAX_LENGTH];
 		
 		try{
 		
@@ -42,16 +41,34 @@ public class Server_thread extends Thread {
 		}
 	}
 	
-	public void sendData(String _str) throws Exception{
+	public void sendData(int _id,String[] _strVec) throws Exception{
 		
 		if(isDisconnected){
 			
 			return;
 		}
 		
-		writer.writeShort(_str.length());
+		int length = 4;
 		
-		writer.writeBytes(_str);
+		for(int i = 0 ; i < _strVec.length ; i++){
+			
+			length = length + 2 + _strVec[i].length();
+		}
+		
+		writer.writeShort(length);
+		
+		writer.writeShort(_id);
+		
+		writer.writeShort(_strVec.length);
+		
+		for(int i = 0 ; i < _strVec.length ; i++){
+			
+			String str = _strVec[i];
+			
+			writer.writeShort(str.length());
+			
+			writer.writeBytes(str);
+		}
 		
 		writer.flush();
 	}
@@ -80,14 +97,9 @@ public class Server_thread extends Thread {
 					
 				}else{
 					
-					int result = reader.read(tmpByteArr, 0, length);
+					int result = reader.read(resultByteArr, pos, length);
 					
-					for(int i = 0 ; i < result ; i++){
-						
-						resultByteArr[pos] = tmpByteArr[i];
-						
-						pos++;
-					}
+					pos = pos + result;
 					
 					if(result < length){
 						
@@ -95,23 +107,42 @@ public class Server_thread extends Thread {
 						
 					}else{
 						
-						String str = new String(resultByteArr, 0, pos);
-
+						pos = 0;
+						
+						int id = PublicTools.byteArrayToShort(resultByteArr, pos);
+						
+						pos = pos + 2;
+						
+						length = PublicTools.byteArrayToShort(resultByteArr, pos);
+						
+						pos = pos + 2;
+						
+						String[] strVec = new String[length];
+						
+						for(int i = 0 ; i < length ; i++){
+							
+							int tmpLength = PublicTools.byteArrayToShort(resultByteArr, pos);
+							
+							pos = pos + 2;
+							
+							strVec[i] = new String(resultByteArr, pos, tmpLength);
+							
+							pos = pos + tmpLength;
+						}
+						
 						pos = 0;
 					
 						length = -1;
 						
 						if(service != null){
 						
-							service.process("getData", str);
+							service.process("getData", id, strVec);
 							
 						}else{
 							
-							String[] strArr = str.split(Server_thread_service.REGEX_SPLIT);
+							if(id == 0 && strVec.length == 2){
 							
-							if(strArr.length == 3 && strArr[0].equals("0")){
-							
-								service = DB_user.login(strArr[1], strArr[2]);
+								service = DB_user.login(strVec[0], strVec[1]);
 								
 								if(service != null){
 									
@@ -126,12 +157,12 @@ public class Server_thread extends Thread {
 									
 								}else{
 									
-									sendData("1" + Server_thread_service.REGEX_CONCAT + "false");
+									sendData(1, new String[]{"false"});
 								}
 								
 							}else{
 								
-								sendData("999" + Server_thread_service.REGEX_CONCAT + "Please login first");
+								sendData(999, new String[]{"Please login first"});
 							}
 						}
 					}
