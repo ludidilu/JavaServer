@@ -11,19 +11,21 @@ public class PublicTools {
 		
 		_arr = new ArrayList<>(_arr);
 		
-		ArrayList<T> arr = new ArrayList<>();
+		ArrayList<T> resultArr = new ArrayList<>();
 		
 		while(!_arr.isEmpty()){
 			
 			int i = (int) (Math.random() * _arr.size());
 			
-			arr.add(_arr.remove(i));
+			resultArr.add(_arr.remove(i));
 		}
 		
-		return arr;
+		return resultArr;
 	}
 	
 	public static<T> ArrayList<T> getSomeOfArr(ArrayList<T> _arr, int _num){
+		
+		_arr = new ArrayList<>(_arr);
 		
 		ArrayList<T> resultArr = new ArrayList<>();
 		
