@@ -33,9 +33,7 @@ public class PublicTools {
 			
 			int i = (int)(Math.random() * _arr.size());
 			
-			T data = _arr.remove(i);
-			
-			resultArr.add(data);
+			resultArr.add(_arr.remove(i));
 			
 			_num--;
 		}

@@ -1,7 +1,8 @@
 package data.dataCsv;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -35,7 +36,7 @@ public class Csv {
 	
 	public static void setData(Class<?> cls,String _name,Method _fixMethod) throws Exception{
 		
-		BufferedReader reader = new BufferedReader(new FileReader(path + _name + ".csv"));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path + _name + ".csv"),"UTF-8"));
 		
 		Constructor<?> cons = cls.getConstructor();
 		
