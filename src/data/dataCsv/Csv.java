@@ -158,7 +158,14 @@ public class Csv {
 				
 				default:
 				
-					return Boolean.parseBoolean(_str);
+					if(_str.equals("1")){
+						
+						return true;
+						
+					}else{
+						
+						return false;
+					}
 			}
 		}
 		
