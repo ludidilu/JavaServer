@@ -55,7 +55,7 @@ public class Server_thread extends Thread {
 			length = length + 2 + _strVec[i].length();
 		}
 		
-		System.out.println("准备发包  长度:" + length + " 包编号:" + _id);
+//		System.out.println("准备发包  长度:" + length + " 包编号:" + _id);
 		
 		writer.writeShort(length);
 		
@@ -72,7 +72,7 @@ public class Server_thread extends Thread {
 			writer.writeBytes(str);
 		}
 		
-		System.out.println("发包  长度:" + writer.size());
+//		System.out.println("发包  长度:" + writer.size());
 		
 		writer.flush();
 	}
