@@ -5,7 +5,7 @@ import java.lang.reflect.Field;
 import org.json.JSONObject;
 
 public class UserData {
-
+	
 	public String getSyncData() throws Exception{
 		
 		JSONObject obj = null;
@@ -24,8 +24,6 @@ public class UserData {
 				}
 				
 				obj.put(field.getName(), dataUnit.getData());
-				
-				dataUnit.clear();
 			}
 		}
 
@@ -50,8 +48,6 @@ public class UserData {
 			UserDataUnit dataUnit = (UserDataUnit)field.get(this);
 			
 			obj.put(field.getName(), dataUnit.getData());
-			
-			dataUnit.clear();
 		}
 		
 		return obj.toString();
