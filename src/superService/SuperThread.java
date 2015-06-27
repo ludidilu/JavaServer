@@ -7,7 +7,7 @@ public class SuperThread {
 
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(4);
 	
-	public static void process(SuperService _service){
+	static void process(SuperService _service){
 		
 		threadPool.execute(new SuperThreadUnit(_service));
 	}

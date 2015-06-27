@@ -12,8 +12,8 @@ public class DB {
 		
 		jedis = new Jedis(_path, _port);
         
-        Panel.show("连接数据库成功");
-        
         DB_user.init(_serviceClass,_unitClass);
+        
+        Panel.show("连接数据库成功");
 	}
 }
