@@ -1,9 +1,11 @@
 package userData;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
 import org.json.JSONObject;
 
+import publicTools.SerializeUtil;
 import data.dataDB.DB;
 import data.dataDB.user.DB_user;
 
@@ -26,7 +28,7 @@ public class UserData {
 					obj = new JSONObject();
 				}
 				
-				obj.put(field.getName(), dataUnit.getData());
+				obj.put(field.getName(), dataUnit.getJSONObject());
 			}
 		}
 
@@ -50,7 +52,7 @@ public class UserData {
 			
 			UserDataUnit dataUnit = (UserDataUnit)field.get(this);
 			
-			obj.put(field.getName(), dataUnit.getData());
+			obj.put(field.getName(), dataUnit.getJSONObject());
 		}
 		
 		return obj.toString();
@@ -66,9 +68,9 @@ public class UserData {
 			
 			if(userDataUnit.getDBDirty()){
 				
-				JSONObject obj = userDataUnit.getData();
+				byte[] bytes = SerializeUtil.serialize(userDataUnit);
 				
-				DB.jedis.set(DB_user.PLAYER_DATA + field.getName() + "_" + _name, obj.toString());
+				DB.jedis.set((DB_user.PLAYER_DATA + field.getName() + "_" + _name).getBytes(), bytes);
 			}
 		}
 	}
@@ -79,11 +81,41 @@ public class UserData {
 		
 		for(Field field : fields){
 			
-			UserDataUnit userDataUnit = (UserDataUnit) field.get(this);
+			byte[] bytes = SerializeUtil.serialize(field.get(this));
 			
-			JSONObject obj = userDataUnit.getData();
-				
-			DB.jedis.set(DB_user.PLAYER_DATA + field.getName() + "_" + _name, obj.toString());
+			DB.jedis.set((DB_user.PLAYER_DATA + field.getName() + "_" + _name).getBytes(), bytes);
 		}
 	}
+	
+	public void initAllData() throws Exception{
+		
+		Field[] fields = this.getClass().getFields();
+		
+		for(Field field : fields){
+
+			Class<?> cls = field.getType();
+			
+			Constructor<?> cons = cls.getConstructor();
+			
+			UserDataUnit userDataUnit = (UserDataUnit) cons.newInstance();
+			
+			field.set(this, userDataUnit);
+				
+			userDataUnit.init();
+		}
+	}
+	
+	public void loadAllDataFromDB(String _name) throws Exception{
+		
+		Field[] fields = this.getClass().getFields();
+		
+		for(Field field : fields){
+			
+			UserDataUnit userDataUnit = (UserDataUnit)SerializeUtil.unserialize(DB.jedis.get(DB_user.PLAYER_DATA + field.getName() + "_" + _name).getBytes());
+			
+			field.set(this, userDataUnit);
+		}
+	}
+	
+	
 }

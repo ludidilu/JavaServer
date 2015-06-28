@@ -1,16 +1,16 @@
 package userData;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 
 import org.json.JSONObject;
 
-public class UserDataUnit {
-
+public class UserDataUnit implements Serializable{
+	
 	private boolean dirty = false;
 	private boolean dbDirty = false;
 	
 	public void init(){
-		
 		
 	}
 	
@@ -37,19 +37,7 @@ public class UserDataUnit {
 		return dbDirty;
 	}
 	
-	public void setData(String _str) throws Exception{
-		
-		JSONObject obj = new JSONObject(_str);
-		
-		Field[] fields = this.getClass().getFields();
-		
-		for(Field field : fields){
-
-			field.set(this, obj.get(field.getName()));
-		}
-	}
-	
-	public JSONObject getData() throws Exception{
+	public JSONObject getJSONObject() throws Exception{
 		
 		JSONObject obj = new JSONObject();
 		

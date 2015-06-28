@@ -1,70 +1,97 @@
 package data.dataDB.user;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
 import server.Server_thread_service;
+import superService.SuperService;
 import userData.UserData;
-import userData.UserDataUnit;
 import data.dataDB.DB;
 
 
-public class DB_user {
+public class DB_user extends SuperService{
 	
 	private static String PLAYER_NAME_SET = "player_name_set";
 	private static String PWD = "pwd_";
 	public static String PLAYER_DATA = "player_data_";
 	
-	private static HashMap<String, DB_user_unit> userMapByName = new HashMap<>();
-	
 	private static Constructor<?> serviceCons;
-	private static Class<?> userDataCls;
+	private static Constructor<?> userDataCons;
+	
+	private static HashMap<String, Method> methodMap;
+	
+	protected HashMap<String, Method> getMethodMap(){
+		
+		return methodMap;
+	}
+	
+	public static DB_user instance;
 	
 	public static void init(Class<?> _serviceClass,Class<?> _userDataCls) throws Exception{
 		
+		instance = new DB_user();
+		
 		serviceCons = _serviceClass.getConstructor(DB_user_unit.class);
 		
-		userDataCls = _userDataCls;
+		userDataCons = _userDataCls.getConstructor();
+		
+		methodMap = new HashMap<>();
+		
+		methodMap.put("login",DB_user.class.getDeclaredMethod("login",String.class,String.class));
+		methodMap.put("logout", DB_user.class.getDeclaredMethod("logout", String.class));
+//		methodMap.put("getUserData", DB_user.class.getDeclaredMethod("getUserData", String.class));
 	}
 	
-	public static Server_thread_service login(String _name, String _pwd) throws Exception{
+	private HashMap<String, DB_user_unit> userMapByName = new HashMap<>();
+	
+	public Server_thread_service login(String _name, String _pwd) throws Exception{
 		
-		synchronized (userMapByName) {
+		DB_user_unit unit = userMapByName.get(_name);
+		
+		if(unit != null){
 			
-			DB_user_unit unit = userMapByName.get(_name);
-			
-			if(unit != null){
+			if(unit.pwd.equals(_pwd)){
 				
-				if(unit.pwd.equals(_pwd)){
-					
-					return unit.service;
-					
-				}else{
-					
-					return null;
-				}
+				return unit.service;
 				
 			}else{
 				
-				return getService(_name,_pwd);
+				return null;
+			}
+			
+		}else{
+			
+			unit = getUnitFromDB(_name, _pwd);
+			
+			if(unit != null){
+				
+				userMapByName.put(_name, unit);
+				
+				return unit.service;
+				
+			}else{
+				
+				return null;
 			}
 		}
 	}
 	
-	public static void logout(String _name) throws Exception{
+	public void logout(String _name) throws Exception{
 		
-		synchronized (userMapByName) {
-			
-			DB_user_unit unit = userMapByName.get(_name);
-			
-			unit.userData.saveDataToDB(_name);
+		DB_user_unit unit = userMapByName.get(_name);
+		
+		unit.userData.saveDataToDB(_name);
 
-			userMapByName.remove(_name);
-		}
+		userMapByName.remove(_name);
 	}
 	
-	private static Server_thread_service getService(String _name, String _pwd) throws Exception{
+//	public UserData getUserData(String _name){
+//		
+//		
+//	}
+	
+	private DB_user_unit getUnitFromDB(String _name, String _pwd) throws Exception{
 		
 		String pwd = DB.jedis.get(PWD + _name);
 		
@@ -82,63 +109,31 @@ public class DB_user {
 			
 			unit.service = (Server_thread_service) serviceCons.newInstance(unit);
 			
-			unit.userData = (UserData) userDataCls.getConstructor().newInstance();
+			unit.userData = (UserData) userDataCons.newInstance();
 			
-			Field[] fields = userDataCls.getFields();
-			
-			for(Field field : fields){
-
-				Class<?> cls = field.getType();
-				
-				Constructor<?> cons = cls.getConstructor();
-				
-				UserDataUnit userDataUnit = (UserDataUnit) cons.newInstance();
-				
-				field.set(unit.userData, userDataUnit);
-					
-				userDataUnit.init();
-			}
+			unit.userData.initAllData();
 			
 			unit.userData.saveAllDataToDB(_name);
 			
-			userMapByName.put(_name, unit);
-			
-			return unit.service;
+			return unit;
 			
 		}else{
 			
-			if(pwd == _pwd){
+			if(pwd.equals(_pwd)){
 				
 				DB_user_unit unit = new DB_user_unit();
 				
 				unit.name = _name;
 				
-				unit.pwd = DB.jedis.get(PWD + _name);
+				unit.pwd = pwd;
 				
 				unit.service = (Server_thread_service)serviceCons.newInstance(unit);
 				
-				Constructor<?> userDataCons = userDataCls.getConstructor();
-				
 				unit.userData = (UserData) userDataCons.newInstance();
 				
-				Field[] fields = userDataCls.getFields();
+				unit.userData.loadAllDataFromDB(_name);
 				
-				for(Field field : fields){
-					
-					Class<?> cls = field.getType();
-					
-					Constructor<?> userDataUnitCons = cls.getConstructor();
-					
-					UserDataUnit userDataUnit = (UserDataUnit)userDataUnitCons.newInstance();
-					
-					userDataUnit.setData(DB.jedis.get(PLAYER_DATA + field.getName() + "_" + _name));
-					
-					field.set(unit.userData, userDataUnit);
-				}
-				
-				userMapByName.put(_name, unit);
-				
-				return unit.service;
+				return unit;
 				
 			}else{
 				

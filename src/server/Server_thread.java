@@ -146,7 +146,9 @@ public class Server_thread extends Thread {
 							
 							if(id == 0 && strVec.length == 2){
 							
-								service = DB_user.login(strVec[0], strVec[1]);
+								service = (Server_thread_service)DB_user.instance.call("login", strVec[0], strVec[1]);
+								
+//								service = DB_user.login(strVec[0], strVec[1]);
 								
 								if(service != null){
 									

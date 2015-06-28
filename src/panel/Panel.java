@@ -15,7 +15,7 @@ public class Panel {
 	
 	public static void init(){
 		
-		panel = new JFrame();
+		panel = new JFrame("Server");
 		
 		panel.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		

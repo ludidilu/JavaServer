@@ -25,22 +25,7 @@ public class SuperThreadUnit extends Thread{
 			
 			synchronized(_service){
 				
-				if(_service.locker.isLocked()){
-					
-					if(!_service.locker.isHeldByCurrentThread()){
-					
-						//只有一种情况会走到这里 就是这个service被call了  其他线程直接处理了这个service
-						return;
-					}
-					
-				}else{
-					
-					_service.locker.lock();
-				}
-				
 				if(_service.methodArr.size() == 0){
-					
-					_service.locker.unlock();
 					
 					_service.inQueue = false;
 					
@@ -53,7 +38,11 @@ public class SuperThreadUnit extends Thread{
 			
 			try{
 				
+				_service.locker.lock();
+				
 				method.invoke(_service, arg);
+				
+				_service.locker.unlock();
 				
 			}catch(Exception e){
 				
