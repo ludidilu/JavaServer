@@ -13,7 +13,7 @@ import data.dataDB.DB;
 public class DB_user extends SuperService{
 	
 	private static String PLAYER_NAME_SET = "player_name_set";
-	private static String PWD = "pwd_";
+	public static String PWD = "pwd_";
 	public static String PLAYER_DATA = "player_data_";
 	
 	private static Constructor<?> serviceCons;

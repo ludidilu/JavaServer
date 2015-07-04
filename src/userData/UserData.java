@@ -111,7 +111,7 @@ public class UserData {
 		
 		for(Field field : fields){
 			
-			UserDataUnit userDataUnit = (UserDataUnit)SerializeUtil.unserialize(DB.jedis.get(DB_user.PLAYER_DATA + field.getName() + "_" + _name).getBytes());
+			UserDataUnit userDataUnit = (UserDataUnit)SerializeUtil.unserialize(DB.jedis.get((DB_user.PLAYER_DATA + field.getName() + "_" + _name).getBytes()));
 			
 			field.set(this, userDataUnit);
 		}
